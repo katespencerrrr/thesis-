@@ -1,7 +1,9 @@
 ---
 title: "EDA - Thesis"
-output: pdf_document
-date: "2023-11-28"
+output:
+  html_document:
+    df_print: paged
+date: '2023-11-28'
 ---
 
 ```{r setup, include=FALSE}
@@ -31,10 +33,9 @@ library(readxl)
 ```
 
 ```{r}
-setwd("/Users/katespencer")
 
 # Replace 'your_file.xlsx' with the actual path to your Excel file
-excel_file_path <- "Downloads/filtered_transactions-2.xlsx"
+excel_file_path <- "filtered_transactions.xlsx"
 
 # Get the sheet names in the Excel file
 sheet_names <- excel_sheets(excel_file_path)
@@ -191,7 +192,6 @@ print(empty_string_count)
 industry_counts <- table(df$Industry_Group)
 
 # Display the counts
-print(industry_counts)
 ```
 
 ```{r}
@@ -202,6 +202,13 @@ df <- df %>%
 unique_years <- unique(df$Year)
 print(unique_years)
 ```
+
+
+```{r}
+# Assuming 'your_dataframe' is the name of your data frame
+write_xlsx(df, "~/Custom Office Templates")
+```
+
 ```{r}
 # Create a new dataframe 'c' with rows where 'Connected?' equals 1
 c <- df[df$`Connected?` == 1, ]
@@ -229,6 +236,79 @@ print(paste("% Connected:", mean_connected))
 print(paste("% Connected, Public:", mean_connected_public))
 print(paste("% Connected, Private:", mean_connected_private))
 ```
+
+```{r}
+# Calculate the mean 'Connected?' value for the entire dataset
+mean_connected <- mean(df$`Connected?`, na.rm = TRUE)
+
+# Calculate the mean 'Connected?' value for the 'Public' subset
+mean_connected_public <- mean(public$`Connected?`, na.rm = TRUE)
+
+# Calculate the mean 'Connected?' value for the 'Private' subset
+mean_connected_private <- mean(private$`Connected?`, na.rm = TRUE)
+
+# Calculate the average 'Connected?' value for each unique 'Industry_Group'
+average_by_group <- tapply(df$`Connected?`, df$Industry_Group, mean, na.rm = TRUE)
+
+# Create a data frame for the results
+result_df <- data.frame(
+  "Overall Mean" = mean_connected,
+  "Mean (Public)" = mean_connected_public,
+  "Mean (Private)" = mean_connected_private
+)
+
+pander(result_df, caption = "Summary of Politically Connected Firms")
+
+
+result_df_2 <- data.frame(
+  "Proportion of Connected Sponsors by Group" = average_by_group
+)
+
+
+
+# Print the pretty table
+pander(result_df, caption = "Summary of Politically Connected Firms, by Industry")
+
+colnames(result_df_2)[colnames(result_df_2) == "&nbsp;"] <- "Industry Group"
+
+pander(result_df_2, caption = "Proportion of Connected Firms, By Industry")
+```
+
+```{r}
+# Calculate the mean 'Length of Transaction (Days)' value for the entire dataset
+mean_transaction_length <- mean(df$`Length of Transaction (Days)`, na.rm = TRUE)
+
+# Calculate the mean 'Length of Transaction (Days)' value for the 'Connected' subset
+mean_transaction_length_c <- mean(c$`Length of Transaction (Days)`, na.rm = TRUE)
+
+# Calculate the mean 'Length of Transaction (Days)' value for the 'Not Connected' subset
+mean_transaction_length_nc <- mean(nc$`Length of Transaction (Days)`, na.rm = TRUE)
+
+# Calculate the average 'Length of Transaction (Days)' value for each unique 'Industry_Group'
+average_length_by_group <- tapply(df$`Length of Transaction (Days)`, df$Industry_Group, mean, na.rm = TRUE)
+
+# Create a data frame for the results
+result_df <- data.frame(
+  "Overall Mean" = mean_transaction_length,
+  "Mean (Connected)" = mean_transaction_length_c,
+  "Mean (Not Connected)" = mean_transaction_length_nc
+)
+
+# Print the pretty table
+pander(result_df, caption = "Summary of Transaction Length")
+
+result_df_2 <- data.frame(
+  "Proportion of Transaction Length by Group" = average_length_by_group
+)
+
+# Replace '&nbsp;' with 'Industry Group'
+colnames(result_df_2)[colnames(result_df_2) == "&nbsp;"] <- "Industry Group"
+
+# Print the pretty table
+pander(result_df_2, caption = "Average Transaction Length, By Industry")
+
+```
+
 
 ```{r}
 # To see if industry groups are signficantly more connected 
@@ -300,6 +380,27 @@ cat("Utilities: p-value =", t_test_result_u$p.value, "\n")
 # Thus, Retail, Technology, and Utilities have singificant differences in % political connectedness. 
 # Can call these our 'impacted' industries.
 # Retail and Utilites are lower, TMT is higher.
+
+# Create a data frame with industry groups and corresponding p-values
+industry_results <- data.frame(
+  "Industry Group" = c("Retail", "Education", "Energy", "Finance", "Health", "Manufacturing", "Real Estate", "Tech", "Transport", "Utilities"),
+  "p-value" = c(
+    t_test_result_retail$p.value,
+    t_test_result_education$p.value,
+    t_test_result_energy$p.value,
+    t_test_result_fin$p.value,
+    t_test_result_health$p.value,
+    t_test_result_m$p.value,
+    t_test_result_re$p.value,
+    t_test_result_t$p.value,
+    t_test_result_tr$p.value,
+    t_test_result_u$p.value
+  )
+)
+
+# Print the pretty table
+pander(industry_results, caption = "T-Test Results for Different Industry Groups")
+
 ```
 
 
@@ -337,6 +438,32 @@ differences <- average_length_by_group_c - average_length_by_group_nc
 
 # Display the differences
 print(differences)
+
+# Store the results in a data frame
+results_df <- data.frame(
+  "Group" = c("Connected Firms", "Connected Firms", "Non-Connected Firms", "Non-Connected Firms"),
+  "Metric" = c("Average Length of Transaction", "Median Length of Transaction", "Average Length of Transaction", "Median Length of Transaction"),
+  "Value" = c(mean_length_connected, median_length_connected, mean_length_non_connected, median_length_non_connected)
+)
+
+# Display the results using pander
+pander(results_df, caption = "Summary of Transaction Length for Connected and Non-Connected Firms")
+
+# Calculate the average length of transaction time by industry group
+average_length_by_group <- tapply(df$`Length of Transaction (Days)`, df$Industry_Group, mean, na.rm = TRUE)
+average_length_by_group_c <- tapply(c$`Length of Transaction (Days)`, c$Industry_Group, mean, na.rm = TRUE)
+average_length_by_group_nc <- tapply(nc$`Length of Transaction (Days)`, nc$Industry_Group, mean, na.rm = TRUE)
+
+# Calculate the differences between the two groups
+differences <- data.frame(
+  "Industry Group" = names(differences),
+  "Difference" = differences
+)
+
+# Display the differences using pander
+pander(differences, caption = "Differences in Average Length of Transaction by Industry Group")
+
+
 ```
 ```{r}
 c$`Length of Transaction (Days)` <- as.numeric(c$`Length of Transaction (Days)`)
@@ -436,46 +563,3 @@ median_f_connected <- median(cf, na.rm = TRUE)
 cat("Connected Firms with Connected Firms on Deal - Average Connected Firms:", mean_f_connected, "\n")
 cat("Connected Firms with Connected Firms on Deal - Median Connected Firms:", median_f_connected, "\n")
 ```
-
-
-```{r}
-# Calculate the mean 'Connected?' value for the entire dataset
-mean_connected <- mean(df$`Connected?`, na.rm = TRUE)
-
-# Calculate the mean 'Connected?' value for the 'Public' subset
-mean_connected_public <- mean(public$`Connected?`, na.rm = TRUE)
-
-# Calculate the mean 'Connected?' value for the 'Private' subset
-mean_connected_private <- mean(private$`Connected?`, na.rm = TRUE)
-
-# Calculate the average 'Connected?' value for each unique 'Industry_Group'
-average_by_group <- tapply(df$`Connected?`, df$Industry_Group, mean, na.rm = TRUE)
-
-# Create a data frame for the results
-result_df <- data.frame(
-  "Overall Mean" = mean_connected,
-  "Mean (Public)" = mean_connected_public,
-  "Mean (Private)" = mean_connected_private
-)
-
-result_df_2 <- data.frame(
-  "Average by Group" = average_by_group
-)
-
-
-
-# Print the pretty table
-pander(result_df, caption = "Proportion of Connected Firms")
-
-colnames(result_df_2)[colnames(result_df_2) == "&nbsp;"] <- "Industry Group"
-
-pander(result_df_2, caption = "Proportion of Connected Firms, By Industry")
-```
-
-
-
-
-
-
-
-
