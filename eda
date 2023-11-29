@@ -1,0 +1,272 @@
+---
+title: "EDA - Thesis"
+output: pdf_document
+date: "2023-11-28"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(fig.height=4, fig.width=6, warning = F)
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(randomForest, tree, ISLR, rpart, rattle, pROC, partykit, ggplot2, glmnet, leaps, dplyr, keras, neuralnet, imager, ranger, tm, stringr, lubridate, caret, progressr)
+```
+
+## Read File
+
+```{r}
+# Install and load the readxl package
+install.packages("readxl")
+library(readxl)
+```
+
+```{r}
+setwd("/Users/katespencer")
+
+# Replace 'your_file.xlsx' with the actual path to your Excel file
+excel_file_path <- "Downloads/filtered_transactions-2.xlsx"
+
+# Get the sheet names in the Excel file
+sheet_names <- excel_sheets(excel_file_path)
+
+# Create a list to store DataFrames for each sheet
+dfs <- list()
+
+# Loop through each sheet, read data, and store it in the list
+for (sheet in sheet_names) {
+  df <- read_excel(excel_file_path, sheet = sheet)
+  dfs[[sheet]] <- df
+}
+
+# Now, 'dfs' is a list containing DataFrames for each sheet
+# You can access them like dfs$sheet1, dfs$sheet2, etc.
+
+```
+
+```{r}
+df <- dfs$all
+c <- dfs$connected
+nc <- dfs$`not connected`
+dim(df)
+```
+
+
+```{r}
+# Using colnames() function
+column_names <- colnames(df)
+print(column_names)
+```
+
+## Add Columns to Find Market Premiums, Length of Transaction/Transaction Size 
+
+```{r}
+# Create new column with ratio called 'premium paid' = (Transaction size - net debt )/ market cap
+# names of columns in df are as follows 
+# size = 'Total Transaction Value ($USDmm, Historical rate)'
+# net debt = 'Target/Issuer LTM Financials - Net Debt (at Announcement) ($USDmm, Historical rate)'
+# market cap = 'Target Market Capitalization (1-Day Before Announcement) ($USDmm, Historical rate)'
+
+df$size <- as.numeric(df$`Total Transaction Value ($USDmm, Historical rate)`)
+df$net_debt <- as.numeric(df$`Target/Issuer LTM Financials - Net Debt (at Announcement) ($USDmm, Historical rate)`)
+df$market_cap <- as.numeric(df$`Target Market Capitalization (1-Day Before Announcement) ($USDmm, Historical rate)`)
+
+# Create the 'premium paid' column
+df$premium_paid <- (((df$size - df$net_debt) / df$market_cap)-1)
+
+#Create the Days/Size Column - need to figure out how to normalize this as needed 
+#df$days <- as.numeric(df$`Length of Transaction (Days)`)
+#df$normalized_days <- df$days/(df$size)
+
+print(df$normalized_days)
+#Df with only transactions with premiums information
+premiums <- df[!is.na(df$premium_paid), ]
+```
+
+
+
+## Split into Private and Public
+
+```{r}
+
+# Create an empty DataFrame called 'public'
+private <- data.frame()
+
+# Filter rows where "Exchange:Ticker" is not equal to 0
+private <- df[df$`Company Type [Target/Issuer]` != 'Public Company', ]
+
+# Create an empty DataFrame called 'public'
+public <- data.frame()
+
+# Filter rows where "Company Type [Target/Issuer]" is equal to 'Public Company'
+public <- df[df$`Company Type [Target/Issuer]` == 'Public Company', ]
+
+# Print or view the 'public' DataFrame
+print(public)
+```
+## Create Industry Groups
+
+```{r}
+df$Industry_Group <- ""
+# Group industries based on the criteria defined
+
+# 1. Technology and Communications
+df$Industry_Group[df$`Primary Industry [Target/Issuer]` %in% c("Advertising", "Internet Services and Infrastructure", "Application Software",  "Wireless Telecommunication Services", "IT Consulting and Other Services", "Semiconductors", "Technology Hardware, Storage and Peripherals", "Systems Software", "Technology Hardware, Storage and Peripherals", "Technology Distributors", "Data Processing and Outsourced Services", "Electronic Manufacturing Services", "Electronic Components", "Data Processing and Outsourced Services", "Technology Distributors", "Integrated Telecommunication Services", "Broadcasting", "Computer and Electronics Retail")] <- "Technology and Communications"
+
+# 2. Healthcare and Life Sciences
+df$Industry_Group[df$`Primary Industry [Target/Issuer]` %in% c("Life Sciences Tools and Services", "Health Care Services", "Biotechnology", "Health Care Facilities", "Personal Care Products", "Health Care Supplies", "Health Care Equipment", "Pharmaceuticals", "Managed Health Care", "Health Care Technology", "Health Care Distributors")] <- "Healthcare and Life Sciences"
+
+# 3. Financial Services
+df$Industry_Group[df$`Primary Industry [Target/Issuer]` %in% c("Trading Companies and Distributors", "Regional Banks", "Asset Management and Custody Banks", "Specialized Finance", "Commercial and Residential Mortgage Finance", "Life and Health Insurance", "Real Estate Services", "Financial Exchanges and Data", "Insurance Brokers", "Commercial and Residential Mortgage Finance", "Investment Banking and Brokerage", "Life and Health Insurance", "Consumer Finance")] <- "Financial Services"
+
+# 4. Consumer Goods and Retail
+df$Industry_Group[df$`Primary Industry [Target/Issuer]` %in% c("Specialized Consumer Services", "Apparel, Accessories and Luxury Goods", "Food Retail", "Apparel Retail", "Packaged Foods and Meats", "Electronic Components", "Household Appliances", "Paper Products", "Consumer Electronics", "Computer and Electronics Retail", "Drug Retail", "Soft Drinks and Non-alcoholic Beverages", "Leisure Products", "Food Distributors", "Other Specialty Retail", "Homefurnishing Retail", "Restaurants", "Brewers")] <- "Consumer Goods and Retail"
+
+# 5. Energy 
+df$Industry_Group[df$`Primary Industry [Target/Issuer]` %in% c("Oil and Gas Exploration and Production", "Oil and Gas Equipment and Services", "Renewable Electricity", "Independent Power Producers and Energy Traders", "Oil and Gas Drilling", "Integrated Oil and Gas", "Oil and Gas Storage and Transportation")] <- "Energy"
+
+# 6. Manufacturing and Industrial
+df$Industry_Group[df$`Primary Industry [Target/Issuer]` %in% c("Industrial Machinery and Supplies and Components", "Aerospace and Defense", "Building Products", "Agricultural Products and Services",
+"Fertilizers and Agricultural Chemicals", "Homebuilding",  "Electronic Equipment and Instruments", "Steel", "Diversified Metals and Mining", "Steel", "Gold", "Electronic Manufacturing Services", "Automobile Manufacturers", "Highways and Railtracks", "Heavy Electrical Equipment", "Specialty Chemicals", "Construction and Engineering")] <- "Manufacturing and Industrial"
+
+# 7. Real Estate and Construction
+df$Industry_Group[df$`Primary Industry [Target/Issuer]` %in% c("Real Estate Operating Companies", "Real Estate Development", "Building Products", "Construction Materials", "Construction Machinery and Heavy Transportation Equipment", "Property and Casualty Insurance", "Hotel and Resort REITs",  "Real Estate Services","Casinos and Gaming", "Homebuilding")] <- "Real Estate and Construction"
+
+# 8. Transportation and Logistics
+df$Industry_Group[df$`Primary Industry [Target/Issuer]` %in% c("Air Freight and Logistics", "Airport Services", "Air Freight and Logistics",  "Marine Transportation", "Alternative Carriers", "Highways and Railtracks", "Cargo Ground Transportation", "Marine Transportation", "Marine Ports and Services", "Cable and Satellite")] <- "Transportation and Logistics"
+
+# 9. Utilities and Services
+df$Industry_Group[df$`Primary Industry [Target/Issuer]` %in% c("Water Utilities", "Cable and Satellite", "Water Utilities",  "Electric Utilities", "Environmental and Facilities Services", "Diversified Support Services", "Security and Alarm Services")] <- "Utilities and Services"
+
+# 10. Education
+df$Industry_Group[df$`Primary Industry [Target/Issuer]` %in% c("Research and Consulting Services", "Education Services")] <- "Education"
+
+# 11. Media
+df$Industry_Group[df$`Primary Industry [Target/Issuer]` %in% c("Leisure Facilities", "Movies and Entertainment", "Interactive Home Entertainment", "Broadcasting")] <- "Financial Services"
+
+# 12. Other Industries
+df$Industry_Group[df$`Primary Industry [Target/Issuer]` %in% c("-")] <- "Other Industries"
+
+
+df$Industry_Group <- ifelse(df$Industry_Group == "", "Other Industries", df$Industry_Group)
+
+empty_string_count <- sum(df$Industry_Group == "")
+
+# Display the count of cells with an empty string
+print(empty_string_count)
+
+# Print or view the updated DataFrame
+#print(df$Industry_Group)
+```
+
+```{r}
+industry_counts <- table(df$Industry_Group)
+
+# Display the counts
+print(industry_counts)
+```
+
+```{r}
+# create new column for just year - for time analysis
+df <- df %>%
+  mutate(Year = format(as.Date(`All Transactions Announced Date (Including Bids and Letters of Intent)`, format="%Y-%m-%d"), "%Y"))
+
+unique_years <- unique(df$Year)
+print(unique_years)
+```
+
+## Variable Visualization 
+
+# Degree of Connectedness - Overall
+
+```{r}
+mean_connected <- mean(df$`Connected?`, na.rm = TRUE)
+mean_connected_public <- mean(public$`Connected?`, na.rm = TRUE)
+mean_connected_private <- mean(private$`Connected?`, na.rm = TRUE)
+
+# Calculate the average 'Connected?' value for each unique 'Industry_Group'
+average_by_group <- tapply(df$`Connected?`, df$Industry_Group, mean, na.rm = TRUE)
+
+# Display the result
+print(average_by_group)
+
+# Display the results
+print(paste("% Connected:", mean_connected))
+print(paste("% Connected, Public:", mean_connected_public))
+print(paste("% Connected, Private:", mean_connected_private))
+```
+
+```{r}
+# To see if industry groups are signficantly more connected 
+
+#Retail
+retail <- "Consumer Goods and Retail"
+subset_data_r <- df[df$Industry_Group == retail, ]
+t_test_result_retail <- t.test(subset_data_r$`Connected?`, df$`Connected?`)
+
+#Education
+education <- "Education"
+subset_data_e <- df[df$Industry_Group == education, ]
+t_test_result_education <- t.test(subset_data_e$`Connected?`, df$`Connected?`)
+
+#Energy
+energy <- "Energy"
+subset_data_en <- df[df$Industry_Group == energy, ]
+t_test_result_energy <- t.test(subset_data_en$`Connected?`, df$`Connected?`)
+
+# Financial Services 
+fin <- "Financial Services"
+subset_data_f <- df[df$Industry_Group == fin, ]
+t_test_result_fin <- t.test(subset_data_f$`Connected?`, df$`Connected?`)
+
+#Healthcare and Life Sciences
+health <- "Healthcare and Life Sciences"
+subset_data_h <- df[df$Industry_Group == health, ]
+t_test_result_health <- t.test(subset_data_h$`Connected?`, df$`Connected?`)
+
+
+#Manufacturing and Industrial
+manu <- "Manufacturing and Industrial"
+subset_data_m <- df[df$Industry_Group == manu, ]
+t_test_result_m<- t.test(subset_data_m$`Connected?`, df$`Connected?`)
+
+#Real Estate and Construction
+re <- "Real Estate and Construction"
+subset_data_re <- df[df$Industry_Group == re, ]
+t_test_result_re <- t.test(subset_data_re$`Connected?`, df$`Connected?`)
+
+
+#Technology and Communications
+tech <- "Technology and Communications"
+subset_data_t <- df[df$Industry_Group == tech, ]
+t_test_result_t <- t.test(subset_data_t$`Connected?`, df$`Connected?`)
+
+#Transportation and Logistics
+trans <- "Transportation and Logistics"
+subset_data_tr <- df[df$Industry_Group == trans, ]
+t_test_result_tr <- t.test(subset_data_tr$`Connected?`, df$`Connected?`)
+
+#Utilities and Services
+u <- "Utilities and Services"
+subset_data_u <- df[df$Industry_Group == u, ]
+t_test_result_u <- t.test(subset_data_u$`Connected?`, df$`Connected?`)
+                    
+# Display the results
+cat("Retail: p-value =", t_test_result_retail$p.value, "\n")
+cat("Education: p-value =", t_test_result_education$p.value, "\n")
+cat("Energy: p-value =", t_test_result_energy$p.value, "\n")
+cat("Finance: p-value =", t_test_result_fin$p.value, "\n")
+cat("Health: p-value =", t_test_result_health$p.value, "\n")
+cat("Manufacturing: p-value =", t_test_result_m$p.value, "\n")
+cat("Real Estate: p-value =", t_test_result_re$p.value, "\n")
+cat("Tech: p-value =", t_test_result_t$p.value, "\n")
+cat("Transport: p-value =", t_test_result_tr$p.value, "\n")
+cat("Utilities: p-value =", t_test_result_u$p.value, "\n")
+
+# Thus, Retail, Technology, and Utilities have singificant differences in % political connectedness. 
+# Can call these our 'impacted' industries.
+# Retail and Utilites are lower, TMT is higher.
+```
+
+
+
+
+
+
