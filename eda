@@ -68,14 +68,25 @@ df$size <- as.numeric(df$`Total Transaction Value ($USDmm, Historical rate)`)
 df$net_debt <- as.numeric(df$`Target/Issuer LTM Financials - Net Debt (at Announcement) ($USDmm, Historical rate)`)
 df$market_cap <- as.numeric(df$`Target Market Capitalization (1-Day Before Announcement) ($USDmm, Historical rate)`)
 
+
+c$size <- as.numeric(c$`Total Transaction Value ($USDmm, Historical rate)`)
+c$net_debt <- as.numeric(c$`Target/Issuer LTM Financials - Net Debt (at Announcement) ($USDmm, Historical rate)`)
+c$market_cap <- as.numeric(c$`Target Market Capitalization (1-Day Before Announcement) ($USDmm, Historical rate)`)
+
+nc$size <- as.numeric(nc$`Total Transaction Value ($USDmm, Historical rate)`)
+nc$net_debt <- as.numeric(nc$`Target/Issuer LTM Financials - Net Debt (at Announcement) ($USDmm, Historical rate)`)
+nc$market_cap <- as.numeric(nc$`Target Market Capitalization (1-Day Before Announcement) ($USDmm, Historical rate)`)
+
 # Create the 'premium paid' column
 df$premium_paid <- (((df$size - df$net_debt) / df$market_cap)-1)
+c$premium_paid <- (((c$size - c$net_debt) / c$market_cap)-1)
+nc$premium_paid <- (((nc$size - nc$net_debt) / nc$market_cap)-1)
 
 #Create the Days/Size Column - need to figure out how to normalize this as needed 
 #df$days <- as.numeric(df$`Length of Transaction (Days)`)
 #df$normalized_days <- df$days/(df$size)
 
-print(df$normalized_days)
+#print(df$normalized_days)
 #Df with only transactions with premiums information
 premiums <- df[!is.na(df$premium_paid), ]
 ```
@@ -156,6 +167,7 @@ print(empty_string_count)
 #print(df$Industry_Group)
 ```
 
+
 ```{r}
 industry_counts <- table(df$Industry_Group)
 
@@ -170,6 +182,12 @@ df <- df %>%
 
 unique_years <- unique(df$Year)
 print(unique_years)
+```
+```{r}
+# Create a new dataframe 'c' with rows where 'Connected?' equals 1
+c <- df[df$`Connected?` == 1, ]
+nc <- df[df$`Connected?` == 0, ]
+
 ```
 
 ## Variable Visualization 
@@ -264,6 +282,143 @@ cat("Utilities: p-value =", t_test_result_u$p.value, "\n")
 # Can call these our 'impacted' industries.
 # Retail and Utilites are lower, TMT is higher.
 ```
+
+
+#Variable Comparisons (Connected vs. Not)
+```{r}
+cl = c$'Length of Transaction (Days)'
+ncl= nc$'Length of Transaction (Days)'
+cf = c$'Connected Firms on Deal'
+ncf= nc$'Connected Firms on Deal'
+#[69] "net_debt"[70] "market_cap" [71] "premium_paid"  
+
+# Calculate the average and median for connected firms
+mean_length_connected <- mean(cl, na.rm = TRUE)
+median_length_connected <- median(cl, na.rm = TRUE)
+# Calculate the average and median for non-connected firms
+mean_length_non_connected <- mean(ncl, na.rm = TRUE)
+median_length_non_connected <- median(ncl, na.rm = TRUE)
+
+# Display the results
+cat("Connected Firms - Average Length of Transaction:", mean_length_connected, "\n")
+cat("Connected Firms - Median Length of Transaction:", median_length_connected, "\n")
+cat("Non-Connected Firms - Average Length of Transaction:", mean_length_non_connected, "\n")
+cat("Non-Connected Firms - Median Length of Transaction:", median_length_non_connected, "\n")
+
+# Calculate the average length of transaction time by industry group
+average_length_by_group <- tapply(df$`Length of Transaction (Days)`, df$Industry_Group, mean, na.rm = TRUE)
+#print(average_length_by_group)
+average_length_by_group_c <- tapply(c$`Length of Transaction (Days)`, c$Industry_Group, mean, na.rm = TRUE)
+#print(average_length_by_group_c)
+average_length_by_group_nc <- tapply(nc$`Length of Transaction (Days)`, nc$Industry_Group, mean, na.rm = TRUE)
+#print(average_length_by_group_nc)
+
+# Calculate the differences between the two groups
+differences <- average_length_by_group_c - average_length_by_group_nc
+
+# Display the differences
+print(differences)
+```
+```{r}
+c$`Length of Transaction (Days)` <- as.numeric(c$`Length of Transaction (Days)`)
+nc$`Length of Transaction (Days)` <- as.numeric(nc$`Length of Transaction (Days)`)
+
+# Create a new dataframe 'df_consumer_goods_retail'
+df_consumer_goods_retail <- c[c$Industry_Group == 'Consumer Goods and Retail', c('Length of Transaction (Days)')]
+df_consumer_goods_retail_nc <- nc[nc$Industry_Group == 'Consumer Goods and Retail', c('Length of Transaction (Days)')]
+# Perform t-test
+t_test_result <- t.test(df_consumer_goods_retail, df_consumer_goods_retail_nc)
+# Display the t-test result
+cat("Retail Days P-Value:", t_test_result$p.value, "\n")
+
+df_ed <- c[c$Industry_Group == 'Education', c('Length of Transaction (Days)')]
+df_ed_nc <- nc[nc$Industry_Group == 'Education', c('Length of Transaction (Days)')]
+t_test_result <- t.test(df_ed, df_ed_nc)
+cat("Education Days P-Value:", t_test_result$p.value, "\n")
+
+df_e <- c[c$Industry_Group == 'Energy', c('Length of Transaction (Days)')]
+df_e_nc <- nc[nc$Industry_Group == 'Energy', c('Length of Transaction (Days)')]
+t_test_result <- t.test(df_e, df_e_nc)
+cat("Energy Days P-Value:", t_test_result$p.value, "\n")
+
+df_f <- c[c$Industry_Group == 'Financial Services', c('Length of Transaction (Days)')]
+df_f_nc <- nc[nc$Industry_Group == 'Financial Services', c('Length of Transaction (Days)')]
+t_test_result <- t.test(df_f, df_f_nc)
+cat("Financial Services Days P-Value:", t_test_result$p.value, "\n")
+
+
+df_h <- c[c$Industry_Group == 'Healthcare and Life Sciences', c('Length of Transaction (Days)')]
+df_h_nc <- nc[nc$Industry_Group == 'Healthcare and Life Sciences', c('Length of Transaction (Days)')]
+t_test_result <- t.test(df_h, df_h_nc)
+cat("Healthcare and Life Sciences Days P-Value:", t_test_result$p.value, "\n")
+
+df_m <- c[c$Industry_Group == 'Manufacturing and Industrial', c('Length of Transaction (Days)')]
+df_m_nc <- nc[nc$Industry_Group == 'Manufacturing and Industrial', c('Length of Transaction (Days)')]
+t_test_result <- t.test(df_m, df_m_nc)
+cat("Manufacturing and Industrial Days P-Value:", t_test_result$p.value, "\n")
+
+#Real estate did not work
+
+df_t <- c[c$Industry_Group == 'Technology and Communications', c('Length of Transaction (Days)')]
+df_t_nc <- nc[nc$Industry_Group == 'Technology and Communications', c('Length of Transaction (Days)')]
+t_test_result <- t.test(df_t, df_t_nc)
+cat("Technology and Communications Days P-Value:", t_test_result$p.value, "\n")
+
+df_t <- c[c$Industry_Group == 'Technology and Communications', c('Length of Transaction (Days)')]
+df_t_nc <- nc[nc$Industry_Group == 'Technology and Communications', c('Length of Transaction (Days)')]
+t_test_result <- t.test(df_t, df_t_nc)
+cat("Technology and Communications Days P-Value:", t_test_result$p.value, "\n")
+
+df_tr <- c[c$Industry_Group == 'Transportation and Logistics', c('Length of Transaction (Days)')]
+df_tr_nc <- nc[nc$Industry_Group == 'Transportation and Logistics', c('Length of Transaction (Days)')]
+t_test_result <- t.test(df_tr, df_tr_nc)
+cat("Transportation and Logistics Days P-Value:", t_test_result$p.value, "\n")
+
+df_u <- c[c$Industry_Group == 'Utilities and Services', c('Length of Transaction (Days)')]
+df_u_nc <- nc[nc$Industry_Group == 'Utilities and Services', c('Length of Transaction (Days)')]
+t_test_result <- t.test(df_u, df_u_nc)
+cat("Utilities and Services Days P-Value:", t_test_result$p.value, "\n")
+```
+
+```{r}
+print(c)
+print(length(c$`Length of Transaction (Days)`))
+
+# Calculate the average length of transaction time by industry group
+
+average_l_group_connected <- tapply(c$`Length of Transaction (Days)`, c$Industry_Group, mean, na.rm = TRUE)
+
+average_l_group_not_connected <- tapply(c$`Length of Transaction (Days)`, c$Industry_Group, mean, na.rm = TRUE)
+
+# Display the results
+print(average_length_by_group)
+print(average_l_group_connected)
+print(average_l_group_not_connected)
+
+# Perform t-test for independent samples
+t_test_result <- t.test(c$`Length of Transaction (Days)`, nc$`Length of Transaction (Days)`)
+
+# Display the test result - so the overall difference is significant
+print(t_test_result)
+```
+
+```{r}
+c$`Connected Firms on Deal` <- as.numeric(c$`Connected Firms on Deal`)
+nc$`Connected Firms on Deal` <- as.numeric(nc$`Connected Firms on Deal`)
+
+# Calculate the average and median for connected firms
+mean_f_connected <- mean(cf, na.rm = TRUE)
+median_f_connected <- median(cf, na.rm = TRUE)
+
+# Display the results
+cat("Connected Firms with Connected Firms on Deal - Average Connected Firms:", mean_f_connected, "\n")
+cat("Connected Firms with Connected Firms on Deal - Median Connected Firms:", median_f_connected, "\n")
+```
+
+
+
+
+
 
 
 
