@@ -438,7 +438,39 @@ cat("Connected Firms with Connected Firms on Deal - Median Connected Firms:", me
 ```
 
 
+```{r}
+# Calculate the mean 'Connected?' value for the entire dataset
+mean_connected <- mean(df$`Connected?`, na.rm = TRUE)
 
+# Calculate the mean 'Connected?' value for the 'Public' subset
+mean_connected_public <- mean(public$`Connected?`, na.rm = TRUE)
+
+# Calculate the mean 'Connected?' value for the 'Private' subset
+mean_connected_private <- mean(private$`Connected?`, na.rm = TRUE)
+
+# Calculate the average 'Connected?' value for each unique 'Industry_Group'
+average_by_group <- tapply(df$`Connected?`, df$Industry_Group, mean, na.rm = TRUE)
+
+# Create a data frame for the results
+result_df <- data.frame(
+  "Overall Mean" = mean_connected,
+  "Mean (Public)" = mean_connected_public,
+  "Mean (Private)" = mean_connected_private
+)
+
+result_df_2 <- data.frame(
+  "Average by Group" = average_by_group
+)
+
+
+
+# Print the pretty table
+pander(result_df, caption = "Proportion of Connected Firms")
+
+colnames(result_df_2)[colnames(result_df_2) == "&nbsp;"] <- "Industry Group"
+
+pander(result_df_2, caption = "Proportion of Connected Firms, By Industry")
+```
 
 
 
