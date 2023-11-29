@@ -10,6 +10,18 @@ if (!require("pacman")) install.packages("pacman")
 pacman::p_load(randomForest, tree, ISLR, rpart, rattle, pROC, partykit, ggplot2, glmnet, leaps, dplyr, keras, neuralnet, imager, ranger, tm, stringr, lubridate, caret, progressr)
 ```
 
+```{r}
+if (!requireNamespace("stargazer", quietly = TRUE)) {
+  install.packages("stargazer")
+}
+library(stargazer)
+
+# Load the pander library if not already installed
+if (!requireNamespace("pander", quietly = TRUE)) {
+  install.packages("pander")
+}
+library(pander)
+```
 ## Read File
 
 ```{r}
@@ -53,6 +65,13 @@ dim(df)
 # Using colnames() function
 column_names <- colnames(df)
 print(column_names)
+```
+```{r}
+# Calculate the mean value
+mean_value <- mean(df$`Length of Transaction (Days)`, na.rm = TRUE)
+
+# Display the mean value
+print(mean_value)
 ```
 
 ## Add Columns to Find Market Premiums, Length of Transaction/Transaction Size 
@@ -400,6 +419,9 @@ t_test_result <- t.test(c$`Length of Transaction (Days)`, nc$`Length of Transact
 
 # Display the test result - so the overall difference is significant
 print(t_test_result)
+
+# Print the t-test result using stargazer
+pander(t_test_result)
 ```
 
 ```{r}
