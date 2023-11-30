@@ -40,6 +40,9 @@ if (!requireNamespace("pander", quietly = TRUE)) {
   install.packages("pander")
 }
 library(pander)
+install.packages("knitr")
+library(knitr)
+
 ```
 
 ```{r}
@@ -67,12 +70,8 @@ x <- data.frame(
   "Not Connected (n=972)" = c(mean_length_notconnected, mean_size_notconnected),
   "p-Value of Difference" = c(p_value_l, p_value_s)
 )
-# Set the width option for pander
-options(pander.table.split.table = Inf)  # Display tables in one line
-options(pander.width = 100)  # Adjust the width based on your preference
-options(pander.table.height = 1)  # Adjust the height based on your preference
-options(pander.table.alignment = "left")  # Wrap text by setting alignment to "left"
-pander(x)
+
+kable(x, format = "latex") 
 ```
 
 ```{r}
@@ -223,8 +222,9 @@ print(ccash-ncash)
 
 ```{r}
 #Industry analysis
+# Signifcant for the financial industry 
 cretail<-c[c$`Industry_Group` == 'Consumer Goods and Retail', ]
-cedution<-c[c$`Industry_Group` == 'Education', ]
+ceducation<-c[c$`Industry_Group` == 'Education', ]
 cenergy<-c[c$`Industry_Group` == 'Energy', ]
 cfin<-c[c$`Industry_Group` == 'Financial Services', ]
 chealth<-c[c$`Industry_Group` == 'Healthcare and Life Sciences', ]
@@ -233,16 +233,118 @@ ctech<-c[c$`Industry_Group` == 'Technology and Communications', ]
 ctrans<-c[c$`Industry_Group` == 'Transportation and Logistics', ]
 cutil<-c[c$`Industry_Group` == 'Utilities and Services', ]
 
-ncretail<-c[c$`Industry_Group` == 'Consumer Goods and Retail', ]
-ncedution<-c[c$`Industry_Group` == 'Education', ]
-ncenergy<-c[c$`Industry_Group` == 'Energy', ]
-ncfin<-c[c$`Industry_Group` == 'Financial Services', ]
-nchealth<-c[c$`Industry_Group` == 'Healthcare and Life Sciences', ]
-ncmanu<-c[c$`Industry_Group` == 'Manufacturing and Industrial', ]
-nctech<-c[c$`Industry_Group` == 'Technology and Communications', ]
-nctrans<-c[c$`Industry_Group` == 'Transportation and Logistics', ]
-ncutil<-c[c$`Industry_Group` == 'Utilities and Services', ]
+ncretail<-nc[nc$`Industry_Group` == 'Consumer Goods and Retail', ]
+nceducation<-nc[nc$`Industry_Group` == 'Education', ]
+ncenergy<-nc[nc$`Industry_Group` == 'Energy', ]
+ncfin<-nc[nc$`Industry_Group` == 'Financial Services', ]
+nchealth<-nc[nc$`Industry_Group` == 'Healthcare and Life Sciences', ]
+ncmanu<-nc[nc$`Industry_Group` == 'Manufacturing and Industrial', ]
+nctech<-nc[nc$`Industry_Group` == 'Technology and Communications', ]
+nctrans<-nc[nc$`Industry_Group` == 'Transportation and Logistics', ]
+ncutil<-nc[nc$`Industry_Group` == 'Utilities and Services', ]
+
+mlcr <- mean(cretail$`Length of Transaction (Days)`, na.rm = TRUE)
+mlce <- mean(ceducation$`Length of Transaction (Days)`, na.rm = TRUE)
+mlcen <- mean(cenergy$`Length of Transaction (Days)`, na.rm = TRUE)
+mlcf <- mean(cfin$`Length of Transaction (Days)`, na.rm = TRUE)
+mlch <- mean(chealth$`Length of Transaction (Days)`, na.rm = TRUE)
+mlcm <- mean(cmanu$`Length of Transaction (Days)`, na.rm = TRUE)
+mlct <- mean(ctech$`Length of Transaction (Days)`, na.rm = TRUE)
+mlctr <- mean(ctrans$`Length of Transaction (Days)`, na.rm = TRUE)
+mlcu <- mean(cutil$`Length of Transaction (Days)`, na.rm = TRUE)
+
+mlncr <- mean(ncretail$`Length of Transaction (Days)`, na.rm = TRUE)
+mlnce <- mean(nceducation$`Length of Transaction (Days)`, na.rm = TRUE)
+mlncen <- mean(ncenergy$`Length of Transaction (Days)`, na.rm = TRUE)
+mlncf <- mean(ncfin$`Length of Transaction (Days)`, na.rm = TRUE)
+mlnch <- mean(nchealth$`Length of Transaction (Days)`, na.rm = TRUE)
+mlncm <- mean(ncmanu$`Length of Transaction (Days)`, na.rm = TRUE)
+mlnct <- mean(nctech$`Length of Transaction (Days)`, na.rm = TRUE)
+mlnctr <- mean(nctrans$`Length of Transaction (Days)`, na.rm = TRUE)
+mlncu <- mean(ncutil$`Length of Transaction (Days)`, na.rm = TRUE)
+
+ttretail <- t.test(cretail$`Length of Transaction (Days)`, ncretail$`Length of Transaction (Days)`, na.rm = TRUE)
+tteducation <- t.test(ceducation$`Length of Transaction (Days)`, nceducation$`Length of Transaction (Days)`, na.rm = TRUE)
+ttenergy <- t.test(cenergy$`Length of Transaction (Days)`, ncenergy$`Length of Transaction (Days)`, na.rm = TRUE)
+ttfin <- t.test(cfin$`Length of Transaction (Days)`, ncfin$`Length of Transaction (Days)`, na.rm = TRUE)
+tthealth <- t.test(chealth$`Length of Transaction (Days)`, nchealth$`Length of Transaction (Days)`, na.rm = TRUE)
+ttmanu <- t.test(cmanu$`Length of Transaction (Days)`, ncmanu$`Length of Transaction (Days)`, na.rm = TRUE)
+tttech <- t.test(ctech$`Length of Transaction (Days)`, nctech$`Length of Transaction (Days)`, na.rm = TRUE)
+tttrans <- t.test(ctrans$`Length of Transaction (Days)`, nctrans$`Length of Transaction (Days)`, na.rm = TRUE)
+ttutil <- t.test(cutil$`Length of Transaction (Days)`, ncutil$`Length of Transaction (Days)`, na.rm = TRUE)
+
+pretail <- ttretail$p.value
+peducation <- tteducation$p.value
+penergy <- ttenergy$p.value
+pfin <- ttfin$p.value
+phealth <- tthealth$p.value
+pmanu <- ttmanu$p.value
+ptech <- tttech$p.value
+ptrans <- tttrans$p.value
+putil <- ttutil$p.value
+
+print(pretail) 
+print(peducation) 
+print(penergy)
+print(pfin) # almost sig
+print(phealth)
+print(pmanu) 
+print(ptech)
+print(ptrans)
+print(putil)
+
+
 ```
 
+```{r}
+#Size of transaction, industry 
+mscr <- mean(cretail$`Total Transaction Value ($USDmm, Historical rate)`, na.rm = TRUE)
+msce <- mean(ceducation$`Total Transaction Value ($USDmm, Historical rate)`, na.rm = TRUE)
+mscen <- mean(cenergy$`Total Transaction Value ($USDmm, Historical rate)`, na.rm = TRUE)
+mscf <- mean(cfin$`Total Transaction Value ($USDmm, Historical rate)`, na.rm = TRUE)
+msch <- mean(chealth$`Total Transaction Value ($USDmm, Historical rate)`, na.rm = TRUE)
+mscm <- mean(cmanu$`Total Transaction Value ($USDmm, Historical rate)`, na.rm = TRUE)
+msct <- mean(ctech$`Total Transaction Value ($USDmm, Historical rate)`, na.rm = TRUE)
+msctr <- mean(ctrans$`Total Transaction Value ($USDmm, Historical rate)`, na.rm = TRUE)
+mscu <- mean(cutil$`Total Transaction Value ($USDmm, Historical rate)`, na.rm = TRUE)
 
+msncr <- mean(ncretail$`Total Transaction Value ($USDmm, Historical rate)`, na.rm = TRUE)
+msnce <- mean(nceducation$`Total Transaction Value ($USDmm, Historical rate)`, na.rm = TRUE)
+msncen <- mean(ncenergy$`Total Transaction Value ($USDmm, Historical rate)`, na.rm = TRUE)
+msncf <- mean(ncfin$`Total Transaction Value ($USDmm, Historical rate)`, na.rm = TRUE)
+msnch <- mean(nchealth$`Total Transaction Value ($USDmm, Historical rate)`, na.rm = TRUE)
+msncm <- mean(ncmanu$`Total Transaction Value ($USDmm, Historical rate)`, na.rm = TRUE)
+msnct <- mean(nctech$`Total Transaction Value ($USDmm, Historical rate)`, na.rm = TRUE)
+msnctr <- mean(nctrans$`Total Transaction Value ($USDmm, Historical rate)`, na.rm = TRUE)
+msncu <- mean(ncutil$`Total Transaction Value ($USDmm, Historical rate)`, na.rm = TRUE)
 
+ttretails <- t.test(cretail$`Total Transaction Value ($USDmm, Historical rate)`, ncretail$`Total Transaction Value ($USDmm, Historical rate)`, na.rm = TRUE)
+tteducations <- t.test(ceducation$`Total Transaction Value ($USDmm, Historical rate)`, nceducation$`Total Transaction Value ($USDmm, Historical rate)`, na.rm = TRUE)
+ttenergys <- t.test(cenergy$`Total Transaction Value ($USDmm, Historical rate)`, ncenergy$`Total Transaction Value ($USDmm, Historical rate)`, na.rm = TRUE)
+ttfins <- t.test(cfin$`Total Transaction Value ($USDmm, Historical rate)`, ncfin$`Total Transaction Value ($USDmm, Historical rate)`, na.rm = TRUE)
+tthealths <- t.test(chealth$`Total Transaction Value ($USDmm, Historical rate)`, nchealth$`Total Transaction Value ($USDmm, Historical rate)`, na.rm = TRUE)
+ttmanus <- t.test(cmanu$`Total Transaction Value ($USDmm, Historical rate)`, ncmanu$`Total Transaction Value ($USDmm, Historical rate)`, na.rm = TRUE)
+tttechs <- t.test(ctech$`Total Transaction Value ($USDmm, Historical rate)`, nctech$`Total Transaction Value ($USDmm, Historical rate)`, na.rm = TRUE)
+tttranss <- t.test(ctrans$`Total Transaction Value ($USDmm, Historical rate)`, nctrans$`Total Transaction Value ($USDmm, Historical rate)`, na.rm = TRUE)
+ttutils <- t.test(cutil$`Total Transaction Value ($USDmm, Historical rate)`, ncutil$`Total Transaction Value ($USDmm, Historical rate)`, na.rm = TRUE)
+
+pretails <- ttretails$p.value
+peducations <- tteducations$p.value
+penergys <- ttenergys$p.value
+pfins <- ttfins$p.value
+phealths <- tthealths$p.value
+pmanus <- ttmanus$p.value
+ptechs <- tttechs$p.value
+ptranss <- tttranss$p.value
+putils <- ttutils$p.value
+
+print(pretails) 
+print(peducations) 
+print(penergys) #sig
+print(pfins) 
+print(phealths) #sig
+print(pmanus) #sig
+print(ptechs) #sig
+print(ptranss)
+print(putils)
+```
