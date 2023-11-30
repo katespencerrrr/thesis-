@@ -1,0 +1,248 @@
+---
+title: "Visualizations - Thesis"
+output: pdf_document
+date: "2023-11-29"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(repos = c(CRAN = "https://cloud.r-project.org"))
+```
+
+```{r}
+# Install and load the readxl package
+install.packages("readxl")
+library(readxl)
+```
+
+```{r}
+setwd("/Users/katespencer")
+excel_file_path <- "Desktop/eda_df.xlsx"
+df <- read_excel(excel_file_path)
+#names(df)
+df$`Total Transaction Value ($USDmm, Historical rate)` <- as.numeric(df$`Total Transaction Value ($USDmm, Historical rate)`)
+df$`Connected?` <- as.numeric(df$`Connected?`)
+df$`Length of Transaction (Days)` <- as.numeric(df$`Length of Transaction (Days)`)
+df$`Target Market Capitalization (1-Day Before Announcement) ($USDmm, Historical rate)` <- as.numeric(df$`Target Market Capitalization (1-Day Before Announcement) ($USDmm, Historical rate)`)
+df$`net_debt` <- as.numeric(df$`net_debt`)
+df$`EBITDA [LTM] ($USDmm, Historical rate) [Target/Issuer]` <- as.numeric(df$`EBITDA [LTM] ($USDmm, Historical rate) [Target/Issuer]`)
+df$`Target/Issuer LTM Financials - EBIT (at Announcement) ($USDmm, Historical rate)` <- as.numeric(df$`Target/Issuer LTM Financials - EBIT (at Announcement) ($USDmm, Historical rate)`)
+df$`Target/Issuer LTM Financials - Earnings from Continuing Ops (at Announcement) ($USDmm, Historical rate)` <- as.numeric(df$`Target/Issuer LTM Financials - Earnings from Continuing Ops (at Announcement) ($USDmm, Historical rate)`)
+df$`Target/Issuer LTM Financials - Total Cash & ST Investments (at Announcement) ($USDmm, Historical rate)` <- as.numeric(df$`Target/Issuer LTM Financials - Total Cash & ST Investments (at Announcement) ($USDmm, Historical rate)`)
+df$`Target/Issuer LTM Financials - Total Assets (at Announcement) ($USDmm, Historical rate)` <- as.numeric(df$`Target/Issuer LTM Financials - Total Assets (at Announcement) ($USDmm, Historical rate)`)
+```
+```{r}
+install.packages("stargazer")
+library(stargazer)
+
+# Load the pander library if not already installed
+if (!requireNamespace("pander", quietly = TRUE)) {
+  install.packages("pander")
+}
+library(pander)
+```
+
+```{r}
+c <- df[df$`Connected?` == 1, ]
+nc <- df[df$`Connected?` == 0, ]
+mean_size_connected <- mean(c$`Total Transaction Value ($USDmm, Historical rate)`, na.rm = TRUE)
+mean_size_notconnected <- mean(nc$`Total Transaction Value ($USDmm, Historical rate)`, na.rm = TRUE)
+
+#Significant
+values_connected <- c$`Total Transaction Value ($USDmm, Historical rate)`
+values_notconnected <- nc$`Total Transaction Value ($USDmm, Historical rate)`
+t_test_result_size <- t.test(values_connected, values_notconnected, na.rm = TRUE)
+p_value_s <- t_test_result_size$p.value
+
+mean_length_connected <- mean(c$`Length of Transaction (Days)`, na.rm = TRUE)
+mean_length_notconnected <- mean(nc$`Length of Transaction (Days)`, na.rm = TRUE)
+
+#Significant
+t_test_result_length <- t.test(c$`Length of Transaction (Days)`, nc$`Length of Transaction (Days)`, na.rm = TRUE)
+p_value_l <- t_test_result_length$p.value
+
+x <- data.frame(
+  "_" = c("Average Length of Transaction, Days", "Average Transaction Size, $Ms USD"),
+  "Connected (n=664)" = c(mean_length_connected, mean_size_connected),
+  "Not Connected (n=972)" = c(mean_length_notconnected, mean_size_notconnected),
+  "p-Value of Difference" = c(p_value_l, p_value_s)
+)
+# Set the width option for pander
+options(pander.table.split.table = Inf)  # Display tables in one line
+options(pander.width = 100)  # Adjust the width based on your preference
+options(pander.table.height = 1)  # Adjust the height based on your preference
+options(pander.table.alignment = "left")  # Wrap text by setting alignment to "left"
+pander(x)
+```
+
+```{r}
+# Annual Analysis
+# All mean differences are significant between connected and not connected firms, except for 2019 
+c18<-c[c$`Year` == 2018, ]
+c19<-c[c$`Year` == 2019, ]
+c20<-c[c$`Year` == 2020, ]
+c21<-c[c$`Year` == 2021, ]
+c22<-c[c$`Year` == 2022, ]
+
+nc18<-nc[nc$`Year` == 2018, ]
+nc19<-nc[nc$`Year` == 2019, ]
+nc20<-nc[nc$`Year` == 2020, ]
+nc21<-nc[nc$`Year` == 2021, ]
+nc22<-nc[nc$`Year` == 2022, ]
+
+msc18 <- mean(c18$`Total Transaction Value ($USDmm, Historical rate)`, na.rm = TRUE)
+msc19 <- mean(c19$`Total Transaction Value ($USDmm, Historical rate)`, na.rm = TRUE)
+msc20 <- mean(c20$`Total Transaction Value ($USDmm, Historical rate)`, na.rm = TRUE)
+msc21 <- mean(c21$`Total Transaction Value ($USDmm, Historical rate)`, na.rm = TRUE)
+msc22 <- mean(c22$`Total Transaction Value ($USDmm, Historical rate)`, na.rm = TRUE)
+
+msnc18 <- mean(nc18$`Total Transaction Value ($USDmm, Historical rate)`, na.rm = TRUE)
+msnc19 <- mean(nc19$`Total Transaction Value ($USDmm, Historical rate)`, na.rm = TRUE)
+msnc20 <- mean(nc20$`Total Transaction Value ($USDmm, Historical rate)`, na.rm = TRUE)
+msnc21 <- mean(nc21$`Total Transaction Value ($USDmm, Historical rate)`, na.rm = TRUE)
+msnc22 <- mean(nc22$`Total Transaction Value ($USDmm, Historical rate)`, na.rm = TRUE)
+
+tt18 <- t.test(c18$`Total Transaction Value ($USDmm, Historical rate)`, nc18$`Total Transaction Value ($USDmm, Historical rate)`, na.rm = TRUE)
+tt19 <- t.test(c19$`Total Transaction Value ($USDmm, Historical rate)`, nc19$`Total Transaction Value ($USDmm, Historical rate)`, na.rm = TRUE)
+tt20 <- t.test(c20$`Total Transaction Value ($USDmm, Historical rate)`, nc20$`Total Transaction Value ($USDmm, Historical rate)`, na.rm = TRUE)
+tt21 <- t.test(c21$`Total Transaction Value ($USDmm, Historical rate)`, nc21$`Total Transaction Value ($USDmm, Historical rate)`, na.rm = TRUE)
+tt22 <- t.test(c22$`Total Transaction Value ($USDmm, Historical rate)`, nc22$`Total Transaction Value ($USDmm, Historical rate)`, na.rm = TRUE)
+
+p18 <- tt18$p.value
+p19 <- tt19$p.value
+p20 <- tt20$p.value
+p21 <- tt21$p.value
+p22 <- tt22$p.value
+
+print(p18)
+print(p19)
+print(p20)
+print(p21)
+print(p21)
+
+print(msc18-msnc18)
+print(msc19-msnc19)
+print(msc20-msnc20)
+print(msc21-msnc21)
+print(msc22-msnc22)
+````
+
+```{r}
+# Annual Analysis
+# None of the length differences are signfiicant annually
+
+mlc18 <- mean(c18$`Length of Transaction (Days)`, na.rm = TRUE)
+mlc19 <- mean(c19$`Length of Transaction (Days)`, na.rm = TRUE)
+mlc20 <- mean(c20$`Length of Transaction (Days)`, na.rm = TRUE)
+mlc21 <- mean(c21$`Length of Transaction (Days)`, na.rm = TRUE)
+mlc22 <- mean(c22$`Length of Transaction (Days)`, na.rm = TRUE)
+
+mlnc18 <- mean(nc18$`Length of Transaction (Days)`, na.rm = TRUE)
+mlnc19 <- mean(nc19$`Length of Transaction (Days)`, na.rm = TRUE)
+mlnc20 <- mean(nc20$`Length of Transaction (Days)`, na.rm = TRUE)
+mlnc21 <- mean(nc21$`Length of Transaction (Days)`, na.rm = TRUE)
+mlnc22 <- mean(nc22$`Length of Transaction (Days)`, na.rm = TRUE)
+
+tt18l <- t.test(c18$`Length of Transaction (Days)`, nc18$`Length of Transaction (Days)`, na.rm = TRUE)
+tt19l <- t.test(c19$`Length of Transaction (Days)`, nc19$`Length of Transaction (Days)`, na.rm = TRUE)
+tt20l <- t.test(c20$`Length of Transaction (Days)`, nc20$`Length of Transaction (Days)`, na.rm = TRUE)
+tt21l <- t.test(c21$`Length of Transaction (Days)`, nc21$`Length of Transaction (Days)`, na.rm = TRUE)
+tt22l <- t.test(c22$`Length of Transaction (Days)`, nc22$`Length of Transaction (Days)`, na.rm = TRUE)
+
+p18l <- tt18l$p.value
+p19l <- tt19l$p.value
+p20l <- tt20l$p.value
+p21l <- tt21l$p.value
+p22l <- tt22l$p.value
+
+print(p18l)
+print(p19l)
+print(p20l)
+print(p21l)
+print(p21l)
+
+print(mlc18-mlnc18)
+print(mlc19-mlnc19)
+print(mlc20-mlnc20)
+print(mlc21-mlnc21)
+print(mlc22-mlnc22)
+````
+
+```{r}
+# Financial Analysis
+# Connected firms exit high market cap companies with more cash on balance sheet at time of transaction
+
+cmarketcap <- mean(c$`Target Market Capitalization (1-Day Before Announcement) ($USDmm, Historical rate)`, na.rm = TRUE)
+ncmarketcap <- mean(nc$`Target Market Capitalization (1-Day Before Announcement) ($USDmm, Historical rate)`, na.rm = TRUE)
+cnetdebt <- mean(c$`net_debt`, na.rm = TRUE)
+ncnetdebt <- mean(nc$`net_debt`, na.rm = TRUE)
+cebitda <- mean(c$`EBITDA [LTM] ($USDmm, Historical rate) [Target/Issuer]`, na.rm = TRUE)
+ncebitda <- mean(nc$`EBITDA [LTM] ($USDmm, Historical rate) [Target/Issuer]`, na.rm = TRUE)
+cebit <- mean(c$`Target/Issuer LTM Financials - EBIT (at Announcement) ($USDmm, Historical rate)`, na.rm = TRUE)
+ncebit <- mean(nc$`Target/Issuer LTM Financials - EBIT (at Announcement) ($USDmm, Historical rate)`, na.rm = TRUE)
+ccont <- mean(c$`Target/Issuer LTM Financials - Earnings from Continuing Ops (at Announcement) ($USDmm, Historical rate)`, na.rm = TRUE)
+nccont <- mean(nc$`Target/Issuer LTM Financials - Earnings from Continuing Ops (at Announcement) ($USDmm, Historical rate)`, na.rm = TRUE)
+ccash <- mean(c$`Target/Issuer LTM Financials - Total Cash & ST Investments (at Announcement) ($USDmm, Historical rate)`, na.rm = TRUE)
+ncash <- mean(nc$`Target/Issuer LTM Financials - Total Cash & ST Investments (at Announcement) ($USDmm, Historical rate)`, na.rm = TRUE)
+cassets <- mean(c$`Target/Issuer LTM Financials - Total Assets (at Announcement) ($USDmm, Historical rate)`, na.rm = TRUE)
+ncassets <- mean(nc$`Target/Issuer LTM Financials - Total Assets (at Announcement) ($USDmm, Historical rate)`, na.rm = TRUE)
+cpremium <- mean(c$`premium_paid`, na.rm = TRUE)
+ncpremium <- mean(nc$`premium_paid`, na.rm = TRUE)
+
+ttmarketcap <- t.test(c$`Target Market Capitalization (1-Day Before Announcement) ($USDmm, Historical rate)`, nc$`Target Market Capitalization (1-Day Before Announcement) ($USDmm, Historical rate)`, na.rm = TRUE)
+ttnetdebt <- t.test(c$`net_debt`, nc$`net_debt`, na.rm = TRUE)
+ttebitda <- t.test(c$`EBITDA [LTM] ($USDmm, Historical rate) [Target/Issuer]`, nc$`EBITDA [LTM] ($USDmm, Historical rate) [Target/Issuer]`, na.rm = TRUE)
+ttebit <- t.test(c$`Target/Issuer LTM Financials - EBIT (at Announcement) ($USDmm, Historical rate)`, nc$`Target/Issuer LTM Financials - EBIT (at Announcement) ($USDmm, Historical rate)`, na.rm = TRUE)
+ttcont <- t.test(c$`Target/Issuer LTM Financials - Earnings from Continuing Ops (at Announcement) ($USDmm, Historical rate)`, nc$`Target/Issuer LTM Financials - Earnings from Continuing Ops (at Announcement) ($USDmm, Historical rate)`, na.rm = TRUE)
+ttcash <- t.test(c$`Target/Issuer LTM Financials - Total Cash & ST Investments (at Announcement) ($USDmm, Historical rate)`, nc$`Target/Issuer LTM Financials - Total Cash & ST Investments (at Announcement) ($USDmm, Historical rate)`, na.rm = TRUE)
+ttassets <- t.test(c$`Target/Issuer LTM Financials - Total Assets (at Announcement) ($USDmm, Historical rate)`, nc$`Target/Issuer LTM Financials - Total Assets (at Announcement) ($USDmm, Historical rate)`, na.rm = TRUE)
+ttpremium <- t.test(c$`premium_paid`, nc$`premium_paid`,na.rm = TRUE)
+
+pmarketcap <- ttmarketcap$p.value
+pnetdebt <- ttnetdebt$p.value
+pebitda <- ttebitda$p.value
+pebit <- ttebit$p.value
+pcont <- ttcont$p.value
+pcash <- ttcash$p.value
+passets <- ttassets$p.value
+ppremium <- ttpremium$p.value
+
+print(pmarketcap) #sig
+print(pnetdebt) #almost sig 
+print(pebitda)
+print(pebit)
+print(pcont)
+print(pcash) #sig
+print(passets)
+print(ppremium)
+
+
+print(cmarketcap-ncmarketcap)
+print(ccash-ncash)
+```
+
+```{r}
+#Industry analysis
+cretail<-c[c$`Industry_Group` == 'Consumer Goods and Retail', ]
+cedution<-c[c$`Industry_Group` == 'Education', ]
+cenergy<-c[c$`Industry_Group` == 'Energy', ]
+cfin<-c[c$`Industry_Group` == 'Financial Services', ]
+chealth<-c[c$`Industry_Group` == 'Healthcare and Life Sciences', ]
+cmanu<-c[c$`Industry_Group` == 'Manufacturing and Industrial', ]
+ctech<-c[c$`Industry_Group` == 'Technology and Communications', ]
+ctrans<-c[c$`Industry_Group` == 'Transportation and Logistics', ]
+cutil<-c[c$`Industry_Group` == 'Utilities and Services', ]
+
+ncretail<-c[c$`Industry_Group` == 'Consumer Goods and Retail', ]
+ncedution<-c[c$`Industry_Group` == 'Education', ]
+ncenergy<-c[c$`Industry_Group` == 'Energy', ]
+ncfin<-c[c$`Industry_Group` == 'Financial Services', ]
+nchealth<-c[c$`Industry_Group` == 'Healthcare and Life Sciences', ]
+ncmanu<-c[c$`Industry_Group` == 'Manufacturing and Industrial', ]
+nctech<-c[c$`Industry_Group` == 'Technology and Communications', ]
+nctrans<-c[c$`Industry_Group` == 'Transportation and Logistics', ]
+ncutil<-c[c$`Industry_Group` == 'Utilities and Services', ]
+```
+
+
+
