@@ -158,7 +158,7 @@ print(p18l)
 print(p19l)
 print(p20l)
 print(p21l)
-print(p21l)
+print(p22l)
 
 print(mlc18-mlnc18)
 print(mlc19-mlnc19)
@@ -348,3 +348,5 @@ print(ptechs) #sig
 print(ptranss)
 print(putils)
 ```
+
+
