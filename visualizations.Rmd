@@ -1,7 +1,9 @@
 ---
 title: "Visualizations - Thesis"
-output: pdf_document
-date: "2023-11-29"
+output:
+  html_document:
+    df_print: paged
+date: '2023-11-29'
 ---
 
 ```{r setup, include=FALSE}
@@ -16,8 +18,8 @@ library(readxl)
 ```
 
 ```{r}
-setwd("/Users/katespencer")
-excel_file_path <- "Desktop/eda_df.xlsx"
+setwd("\\\\fs.wharton.upenn.edu/wharton_studentusers/spkate/Downloads")
+excel_file_path <- "eda_df.xlsx"
 df <- read_excel(excel_file_path)
 #names(df)
 df$`Total Transaction Value ($USDmm, Historical rate)` <- as.numeric(df$`Total Transaction Value ($USDmm, Historical rate)`)
@@ -30,6 +32,8 @@ df$`Target/Issuer LTM Financials - EBIT (at Announcement) ($USDmm, Historical ra
 df$`Target/Issuer LTM Financials - Earnings from Continuing Ops (at Announcement) ($USDmm, Historical rate)` <- as.numeric(df$`Target/Issuer LTM Financials - Earnings from Continuing Ops (at Announcement) ($USDmm, Historical rate)`)
 df$`Target/Issuer LTM Financials - Total Cash & ST Investments (at Announcement) ($USDmm, Historical rate)` <- as.numeric(df$`Target/Issuer LTM Financials - Total Cash & ST Investments (at Announcement) ($USDmm, Historical rate)`)
 df$`Target/Issuer LTM Financials - Total Assets (at Announcement) ($USDmm, Historical rate)` <- as.numeric(df$`Target/Issuer LTM Financials - Total Assets (at Announcement) ($USDmm, Historical rate)`)
+
+dim(df)
 ```
 ```{r}
 install.packages("stargazer")
@@ -43,6 +47,10 @@ library(pander)
 install.packages("knitr")
 library(knitr)
 
+```
+```{r}
+install.packages("xtable")
+library(xtable)
 ```
 
 ```{r}
@@ -71,7 +79,8 @@ x <- data.frame(
   "p-Value of Difference" = c(p_value_l, p_value_s)
 )
 
-kable(x, format = "latex") 
+xt <- xtable(x)
+print(x)
 ```
 
 ```{r}
@@ -88,6 +97,84 @@ nc19<-nc[nc$`Year` == 2019, ]
 nc20<-nc[nc$`Year` == 2020, ]
 nc21<-nc[nc$`Year` == 2021, ]
 nc22<-nc[nc$`Year` == 2022, ]
+
+```
+
+```{r}
+
+#Report split of connected and non connected firms by year 
+
+length_connected_2018 <- length(c18$`Total Transaction Value ($USDmm, Historical rate)`)
+length_non_connected_2018 <- length(nc18$`Total Transaction Value ($USDmm, Historical rate)`)
+x18 <- length_connected_2018/(length_connected_2018+length_non_connected_2018)
+print(paste("Percent connected, 2018: ", x18))
+
+length_connected_2019 <- length(c19$`Total Transaction Value ($USDmm, Historical rate)`)
+length_non_connected_2019 <- length(nc19$`Total Transaction Value ($USDmm, Historical rate)`)
+x <- length_connected_2019/(length_connected_2019+length_non_connected_2019)
+print(paste("Percent connected, 2019: ", x))
+
+length_connected_2020 <- length(c20$`Total Transaction Value ($USDmm, Historical rate)`)
+length_non_connected_2020 <- length(nc20$`Total Transaction Value ($USDmm, Historical rate)`)
+x20 <- length_connected_2020/(length_connected_2020+length_non_connected_2020)
+print(paste("Percent connected, 2020: ", x20))
+
+length_connected_2021 <- length(c21$`Total Transaction Value ($USDmm, Historical rate)`)
+length_non_connected_2021 <- length(nc21$`Total Transaction Value ($USDmm, Historical rate)`)
+x21 <- length_connected_2021/(length_connected_2021+length_non_connected_2021)
+print(paste("Percent connected, 2019: ", x21))
+
+length_connected_2022 <- length(c22$`Total Transaction Value ($USDmm, Historical rate)`)
+length_non_connected_2022 <- length(nc22$`Total Transaction Value ($USDmm, Historical rate)`)
+x22 <- length_connected_2022/(length_connected_2022+length_non_connected_2022)
+print(paste("Percent connected, 2022: ", x22))
+
+
+```
+
+```{r}
+# Combine the data
+years <- c(2018, 2019, 2020, 2021, 2022)
+percent_connected <- c(x18, x, x20, x21, x22)
+
+# Create a data frame
+data_for_plot <- data.frame(Year = years, Percent_Connected = percent_connected)
+
+# Plot the line graph
+plot(
+  data_for_plot$Year, 
+  data_for_plot$Percent_Connected, 
+  type = "l",  # "l" for lines
+  col = "blue",
+  lwd = 2,
+  main = "Percentage of Connected Firms Over Years",
+  xlab = "Year",
+  ylab = "Percentage Connected"
+)
+
+# Add points for better visibility
+points(
+  data_for_plot$Year, 
+  data_for_plot$Percent_Connected, 
+  col = "red",
+  pch = 16
+)
+
+
+# Add data labels
+text(
+  x = data_for_plot$Year,
+  y = data_for_plot$Percent_Connected + 0.02,
+  labels = paste0(round(data_for_plot$Percent_Connected * 100), "%"),
+  col = "black"
+)
+
+
+```
+
+```{r}
+
+
 
 msc18 <- mean(c18$`Total Transaction Value ($USDmm, Historical rate)`, na.rm = TRUE)
 msc19 <- mean(c19$`Total Transaction Value ($USDmm, Historical rate)`, na.rm = TRUE)
@@ -118,6 +205,12 @@ print(p19)
 print(p20)
 print(p21)
 print(p21)
+
+
+print(msc18)
+print(msc19)
+print(msnc19)
+print(msc20)
 
 print(msc18-msnc18)
 print(msc19-msnc19)
@@ -348,5 +441,3 @@ print(ptechs) #sig
 print(ptranss)
 print(putils)
 ```
-
-
